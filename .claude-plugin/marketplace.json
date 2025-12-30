@@ -1,0 +1,24 @@
+{
+  "name": "hanibalsk-marketplace",
+  "owner": {
+    "name": "hanibalsk",
+    "url": "https://github.com/hanibalsk"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Curated Claude Code plugins for autonomous development"
+  },
+  "plugins": [
+    {
+      "name": "claude-auto-agents",
+      "version": "1.0.0",
+      "description": "Minimalist autonomous agent framework using Claude Code hooks - enables continuous iteration and multi-agent workflows",
+      "source": "github:hanibalsk/claude-auto-agents",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["automation", "agents", "loop", "orchestrator", "workflow", "autonomous"]
+    }
+  ]
+}
