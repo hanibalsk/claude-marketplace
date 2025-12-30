@@ -9,5 +9,6 @@
   "repository": "https://github.com/hanibalsk/claude-auto-agents",
   "license": "MIT",
   "keywords": ["automation", "agents", "loop", "orchestrator", "workflow", "autonomous"],
-  "commands": "./commands/"
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
 }
