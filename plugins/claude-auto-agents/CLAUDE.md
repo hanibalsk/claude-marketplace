@@ -65,7 +65,7 @@ Work items are tracked in `work/queue.md`. The format is:
 | `fixer` | Bash,Read,Write,Edit,Glob,Grep | sonnet | Fix issues/CI failures |
 | `orchestrator` | All + Task | opus | Autonomous control |
 | `explorer` | Read,Glob,Grep | haiku | Fast codebase exploration |
-| `pr-shepherd` | All + Task | sonnet | PR lifecycle management |
+| `pr-shepherd` | All + Task | sonnet | PR lifecycle management (uses `gh workflow run approve-pr` to approve) |
 | `conflict-resolver` | Bash,Read,Write,Edit | sonnet | Merge conflict resolution |
 
 ## Commands
