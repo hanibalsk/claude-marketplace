@@ -19,6 +19,61 @@
         "url": "https://github.com/hanibalsk"
       },
       "keywords": ["automation", "agents", "loop", "orchestrator", "workflow", "autonomous"]
+    },
+    {
+      "name": "bmad-system",
+      "version": "1.0.0",
+      "description": "BMAD (Build-Monitor-Analyze-Develop) autonomous orchestration framework for multi-agent workflows",
+      "source": "./plugins/bmad-system",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["bmad", "orchestration", "epics", "stories", "planning", "autonomous"]
+    },
+    {
+      "name": "claude-threads",
+      "version": "1.0.0",
+      "description": "Multi-agent threading and git worktree management for parallel agent execution",
+      "source": "./plugins/claude-threads",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["threads", "worktree", "parallel", "git", "isolation", "multi-agent"]
+    },
+    {
+      "name": "dev-agents",
+      "version": "1.0.0",
+      "description": "Core development agents and skills - backend, debugging, refactoring, database, API design, DevOps, security",
+      "source": "./plugins/dev-agents",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["development", "backend", "debugging", "refactoring", "database", "devops", "security"]
+    },
+    {
+      "name": "pr-toolkit",
+      "version": "1.0.0",
+      "description": "PR lifecycle management and code review workflows - shepherd PRs from creation to merge",
+      "source": "./plugins/pr-toolkit",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["pr", "pull-request", "review", "merge", "ci", "github"]
+    },
+    {
+      "name": "story-agents",
+      "version": "1.0.0",
+      "description": "Feature and story development agents - story implementation, issue fixing, exploration, test writing",
+      "source": "./plugins/story-agents",
+      "author": {
+        "name": "hanibalsk",
+        "url": "https://github.com/hanibalsk"
+      },
+      "keywords": ["stories", "features", "issues", "testing", "exploration", "development"]
     }
   ]
 }
