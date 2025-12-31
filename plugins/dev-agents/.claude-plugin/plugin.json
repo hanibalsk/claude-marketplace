@@ -1,0 +1,13 @@
+{
+  "name": "dev-agents",
+  "version": "1.0.0",
+  "description": "Core development agents and skills - specialists for backend, database, security, debugging, and refactoring",
+  "author": {
+    "name": "hanibalsk",
+    "url": "https://github.com/hanibalsk"
+  },
+  "repository": "https://github.com/hanibalsk/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["development", "backend", "database", "security", "debugging", "tdd", "refactoring"],
+  "commands": "./commands/"
+}

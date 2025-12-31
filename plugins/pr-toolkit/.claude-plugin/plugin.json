@@ -1,0 +1,13 @@
+{
+  "name": "pr-toolkit",
+  "version": "1.0.0",
+  "description": "PR lifecycle management and code review workflows - agents for creating, reviewing, and merging pull requests",
+  "author": {
+    "name": "hanibalsk",
+    "url": "https://github.com/hanibalsk"
+  },
+  "repository": "https://github.com/hanibalsk/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["pr", "pull-request", "code-review", "merge", "github", "workflow"],
+  "commands": "./commands/"
+}

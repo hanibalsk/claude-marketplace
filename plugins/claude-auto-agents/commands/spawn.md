@@ -20,8 +20,8 @@ Spawn a specific type of agent to handle a task.
 
 | Agent | Tools | Model | Use Case |
 |-------|-------|-------|----------|
-| `developer` | All + Task | sonnet | Feature implementation |
-| `reviewer` | Read-only | sonnet | Code review |
+| `developer` | All + Task | opus | Feature implementation |
+| `reviewer` | Read-only | opus | Code review |
 | `fixer` | All | sonnet | Fix issues/failures |
 | `orchestrator` | All + Task | opus | Autonomous control |
 | `explorer` | Read-only | haiku | Codebase exploration |
