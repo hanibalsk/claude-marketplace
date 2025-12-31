@@ -36,6 +36,7 @@ BMAD (Build-Monitor-Analyze-Develop) autonomous orchestration framework for mult
 ## Commands
 
 - `/bmad` - Run BMAD Autopilot autonomous development
+- `/bmad-loop` - Run BMAD epics in autonomous loop (requires claude-auto-agents plugin)
 - `/bmad/*` - Nested BMAD commands for team workflows
 
 ## Usage
@@ -49,4 +50,10 @@ Spawn orchestration agents:
 ```
 /spawn bmad-orchestrator "coordinate feature development"
 /spawn multi-agent-coordinator "manage the review pipeline"
+```
+
+Run epics in autonomous loop (requires claude-auto-agents):
+```
+/bmad-loop "7A 8A"
+/bmad-loop "sprint-12.*"
 ```
