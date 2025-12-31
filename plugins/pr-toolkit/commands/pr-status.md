@@ -1,3 +1,8 @@
+---
+description: Check PR status including CI checks, reviews, and merge status
+argument: PR number (optional, defaults to current branch's PR)
+---
+
 # PR Status Dashboard
 
 Check the status of PR #$ARGUMENTS (or current branch's PR if no number provided).

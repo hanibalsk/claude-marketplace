@@ -1,3 +1,8 @@
+---
+description: Auto-fill PR description with epic, stories, and use case context
+argument: epic number (optional, auto-detects from branch name)
+---
+
 # Auto-Fill PR Description with Epic/Story/UC Context
 
 Extract relevant documentation from the codebase and fill PR description with epic, stories, and use case information.

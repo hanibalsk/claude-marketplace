@@ -1,3 +1,8 @@
+---
+description: Sync current feature branch with latest changes from main
+argument: strategy (rebase, merge) - optional, auto-detects
+---
+
 # Sync Current Branch with Main
 
 Safely synchronize the current feature branch with the latest changes from main.

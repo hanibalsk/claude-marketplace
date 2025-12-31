@@ -1,3 +1,8 @@
+---
+description: Remove build artifacts and caches across all project components
+argument: scope (all, rust, node, kotlin)
+---
+
 # Clean Build Artifacts
 
 Remove build artifacts and caches across all project components.

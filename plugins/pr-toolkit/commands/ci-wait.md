@@ -1,3 +1,8 @@
+---
+description: Wait for all CI checks to complete on a PR
+argument: PR number (optional, defaults to current branch's PR)
+---
+
 # Wait for CI Completion
 
 Wait for all CI checks to complete on PR #$ARGUMENTS (or current branch's PR).

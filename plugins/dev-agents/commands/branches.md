@@ -1,3 +1,8 @@
+---
+description: View, cleanup, and manage git branches
+argument: action (cleanup, cleanup-remote, delete <branch>)
+---
+
 # Branch Management
 
 View, cleanup, and manage git branches.

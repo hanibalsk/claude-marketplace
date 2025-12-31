@@ -1,3 +1,8 @@
+---
+description: Check for outdated dependencies across all project components
+argument: scope (rust, node, kotlin, security)
+---
+
 # Check Dependencies
 
 Check for outdated dependencies across all project components.

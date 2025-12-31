@@ -39,10 +39,10 @@ QUEUE
 HISTORY
 
     # Create current.md
-    echo "# Current Work\n\nNo work in progress." > "$PROJECT_DIR/work/current.md"
+    printf "# Current Work\n\nNo work in progress.\n" > "$PROJECT_DIR/work/current.md"
 
     # Create blockers.md
-    echo "# Blocked Items\n\nNo blocked items." > "$PROJECT_DIR/work/blockers.md"
+    printf "# Blocked Items\n\nNo blocked items.\n" > "$PROJECT_DIR/work/blockers.md"
 fi
 
 # Source library functions
@@ -55,6 +55,7 @@ LOOP_ITERATION=0
 LOOP_PROMPT=""
 
 if [[ -f "$LOOP_STATE_FILE" ]]; then
+    # shellcheck source=/dev/null
     source "$LOOP_STATE_FILE"
 fi
 
@@ -96,12 +97,13 @@ if [[ -f "$QUEUE_FILE" ]]; then
 
     # Count items in each section
     IN_PROGRESS=$(grep -c "^\- \[ \]" "$QUEUE_FILE" 2>/dev/null | head -1 || echo "0")
-    PENDING=$(grep -c "^- \[ \]" "$QUEUE_FILE" 2>/dev/null || echo "0")
+    PENDING_COUNT=$(grep -c "^- \[ \]" "$QUEUE_FILE" 2>/dev/null || echo "0")
 
     # Get first pending item
     NEXT_ITEM=$(grep -A1 "^## Pending" "$QUEUE_FILE" 2>/dev/null | grep "^\- \[ \]" | head -1 || echo "None")
 
     echo "- In Progress: ~$IN_PROGRESS items"
+    echo "- Pending: ~$PENDING_COUNT items"
     echo "- Next up: $NEXT_ITEM"
 fi
 
