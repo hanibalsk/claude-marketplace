@@ -7,14 +7,17 @@
 # - Dependency checking
 # - Section-aware counting
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Only set dir if not already set (avoid overwriting parent's value)
+if [[ -z "${_QUEUE_MANAGER_DIR:-}" ]]; then
+    _QUEUE_MANAGER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 # Source common utilities
 # shellcheck source=common.sh
-source "$SCRIPT_DIR/common.sh" 2>/dev/null || true
+source "$_QUEUE_MANAGER_DIR/common.sh" 2>/dev/null || true
 
 # Get project directory using common.sh or fallback
-PROJECT_DIR="$(get_project_dir 2>/dev/null || echo "${CLAUDE_PROJECT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}")"
+PROJECT_DIR="$(get_project_dir 2>/dev/null || echo "${CLAUDE_PROJECT_DIR:-$(cd "$_QUEUE_MANAGER_DIR/../../.." && pwd)}")"
 WORK_DIR="$PROJECT_DIR/work"
 QUEUE_FILE="$WORK_DIR/queue.md"
 HISTORY_FILE="$WORK_DIR/history.md"

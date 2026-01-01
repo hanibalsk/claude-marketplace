@@ -4,14 +4,17 @@
 # Manages the autonomous loop state: active/inactive, iteration count, limits,
 # error tracking, and current item tracking.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Only set SCRIPT_DIR if not already set (avoid overwriting parent's value)
+if [[ -z "${_LOOP_CONTROL_DIR:-}" ]]; then
+    _LOOP_CONTROL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 # Source common utilities
 # shellcheck source=common.sh
-source "$SCRIPT_DIR/common.sh" 2>/dev/null || true
+source "$_LOOP_CONTROL_DIR/common.sh" 2>/dev/null || true
 
 # State file location (in work/ for persistence across context resets)
-LOOP_STATE_FILE="$(get_work_dir 2>/dev/null || echo "$SCRIPT_DIR")/.loop-state"
+LOOP_STATE_FILE="$(get_work_dir 2>/dev/null || echo "$_LOOP_CONTROL_DIR")/.loop-state"
 
 # Default values
 DEFAULT_MAX_ITERATIONS=50
