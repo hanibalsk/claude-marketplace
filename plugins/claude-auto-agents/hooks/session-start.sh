@@ -37,12 +37,12 @@ WORK_DIR="$PROJECT_DIR/work"
 
 log_debug "WORK_DIR: $WORK_DIR"
 
-# Initialize work directory if it doesn't exist
+# Initialize work directory and template files if missing
 init_work_directory() {
-    if [[ ! -d "$WORK_DIR" ]]; then
-        mkdir -p "$WORK_DIR"
+    mkdir -p "$WORK_DIR"
 
-        # Create queue.md
+    # Create queue.md if missing
+    if [[ ! -f "$WORK_DIR/queue.md" ]]; then
         cat > "$WORK_DIR/queue.md" << 'QUEUE'
 # Work Queue
 
@@ -58,8 +58,10 @@ init_work_directory() {
 ## Completed
 <!-- Reference - full history in history.md -->
 QUEUE
+    fi
 
-        # Create history.md
+    # Create history.md if missing
+    if [[ ! -f "$WORK_DIR/history.md" ]]; then
         cat > "$WORK_DIR/history.md" << 'HISTORY'
 # Work History
 
@@ -68,11 +70,15 @@ QUEUE
 | Date | ID | Summary | Agent | Iterations |
 |------|----|---------|-------|------------|
 HISTORY
+    fi
 
-        # Create current.md
+    # Create current.md if missing
+    if [[ ! -f "$WORK_DIR/current.md" ]]; then
         printf "# Current Work\n\nNo work in progress.\n" > "$WORK_DIR/current.md"
+    fi
 
-        # Create blockers.md
+    # Create blockers.md if missing
+    if [[ ! -f "$WORK_DIR/blockers.md" ]]; then
         printf "# Blocked Items\n\nNo blocked items.\n" > "$WORK_DIR/blockers.md"
     fi
 }
