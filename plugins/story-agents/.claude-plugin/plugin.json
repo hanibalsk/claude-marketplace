@@ -1,6 +1,6 @@
 {
   "name": "story-agents",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Feature and story development agents - specialists for implementing epics, stories, fixing issues, and exploring codebases",
   "author": {
     "name": "hanibalsk",

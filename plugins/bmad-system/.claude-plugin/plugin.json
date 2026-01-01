@@ -1,6 +1,6 @@
 {
   "name": "bmad-system",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "BMAD (Build-Monitor-Analyze-Develop) autonomous orchestration framework for multi-agent workflows",
   "author": {
     "name": "hanibalsk",
