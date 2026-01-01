@@ -1,2 +1,11 @@
 .DS_Store
 *.log
+
+# Agent work directory runtime files
+work/.loop-state
+work/.status
+work/.debug.log
+work/.loop.log
+work/.agent-history.jsonl
+work/.iteration-history.jsonl
+work/.lock-*
