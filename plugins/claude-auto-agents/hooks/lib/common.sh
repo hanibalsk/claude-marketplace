@@ -52,7 +52,7 @@ acquire_lock() {
     while ! mkdir "$LOCK_DIR" 2>/dev/null; do
         # Check for stale lock (>60 seconds old)
         if [[ -d "$LOCK_DIR" ]]; then
-            local lock_mtime lock_age
+            local lock_mtime lock_age lock_pid
             # macOS uses -f %m, Linux uses -c %Y
             if [[ "$(uname)" == "Darwin" ]]; then
                 lock_mtime=$(stat -f %m "$LOCK_DIR" 2>/dev/null || echo 0)
@@ -60,10 +60,26 @@ acquire_lock() {
                 lock_mtime=$(stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0)
             fi
             lock_age=$(( $(date +%s) - lock_mtime ))
+
+            # Check if lock is stale (old) AND holder is not running
             if [[ $lock_age -gt 60 ]]; then
-                log_debug "Removing stale lock: $LOCK_DIR (age: ${lock_age}s)"
-                rm -rf "$LOCK_DIR"
-                continue
+                # Try to read the PID of the lock holder
+                if [[ -f "$LOCK_DIR/pid" ]]; then
+                    lock_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || echo "")
+                    # If PID exists and process is still running, don't remove
+                    if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
+                        log_debug "Lock held by running process $lock_pid, waiting..."
+                    else
+                        log_debug "Removing stale lock: $LOCK_DIR (age: ${lock_age}s, dead PID: $lock_pid)"
+                        rm -rf "$LOCK_DIR"
+                        continue
+                    fi
+                else
+                    # No PID file, safe to remove stale lock
+                    log_debug "Removing stale lock: $LOCK_DIR (age: ${lock_age}s, no PID)"
+                    rm -rf "$LOCK_DIR"
+                    continue
+                fi
             fi
         fi
 

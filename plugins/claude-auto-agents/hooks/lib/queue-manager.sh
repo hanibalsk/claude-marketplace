@@ -86,13 +86,23 @@ is_queue_empty() {
 
 # === Robust item extraction using awk ===
 
+# Escape special regex characters for safe use in awk patterns
+escape_regex() {
+    local str="$1"
+    # Escape: . * + ? ^ $ [ ] { } ( ) | \
+    # shellcheck disable=SC2016
+    printf '%s' "$str" | sed 's/[.[\*^$()+?{|\\]/\\&/g'
+}
+
 # Extract a single item with all its metadata
 # Returns the item block including all indented lines
 extract_item() {
     local id="$1"
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
     init_queue
 
-    awk -v id="$id" '
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" {
             print
             capturing = 1
@@ -187,9 +197,11 @@ check_dependencies_met() {
 # Check if an item is completed
 is_item_completed() {
     local id="$1"
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
 
     # Check in Completed section of queue
-    if awk -v id="$id" '
+    if awk -v id="$escaped_id" '
         /^## Completed/ { in_completed = 1; next }
         /^## / { in_completed = 0 }
         in_completed && $0 ~ "\\[" id "\\]" { found = 1; exit }
@@ -263,7 +275,9 @@ remove_item() {
     fi
 
     # Remove item and its metadata lines
-    awk -v id="$id" '
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" { skip = 1; next }
         skip && /^  - / { next }
         { skip = 0; print }
@@ -315,7 +329,9 @@ start_item() {
     } > "$tmpentry"
 
     # Remove from current location
-    awk -v id="$id" '
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" { skip = 1; next }
         skip && /^  - / { next }
         { skip = 0; print }
@@ -353,7 +369,9 @@ complete_item() {
     fi
 
     # Remove from queue
-    awk -v id="$id" '
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" { skip = 1; next }
         skip && /^  - / { next }
         { skip = 0; print }
@@ -405,7 +423,9 @@ block_item() {
     } > "$tmpentry"
 
     # Remove from current location
-    awk -v id="$id" '
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" { skip = 1; next }
         skip && /^  - / { next }
         { skip = 0; print }
@@ -459,7 +479,9 @@ unblock_item() {
     echo "$item" | grep -v "Blocker:\|Since:" > "$tmpentry"
 
     # Remove from Blocked
-    awk -v id="$id" '
+    local escaped_id
+    escaped_id=$(escape_regex "$id")
+    awk -v id="$escaped_id" '
         $0 ~ "\\[" id "\\]" { skip = 1; next }
         skip && /^  - / { next }
         { skip = 0; print }

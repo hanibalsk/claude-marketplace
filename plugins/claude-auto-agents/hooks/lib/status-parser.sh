@@ -18,6 +18,20 @@ STATUS_MAX_AGE=300  # 5 minutes
 
 # === Text-based parsing ===
 
+# Escape a string for safe inclusion in shell double quotes
+# Escapes: \ ` $ " and newlines
+escape_for_shell() {
+    local str="$1"
+    # Replace backslash first, then other special chars
+    str="${str//\\/\\\\}"
+    str="${str//\`/\\\`}"
+    str="${str//\$/\\\$}"
+    str="${str//\"/\\\"}"
+    # Replace newlines with space
+    str="${str//$'\n'/ }"
+    printf '%s' "$str"
+}
+
 # Parse STATUS signal from text
 # Usage: parse_status "text with STATUS: COMPLETE etc"
 # Outputs shell-sourceable variables
@@ -31,6 +45,13 @@ parse_status() {
     files=$(echo "$text" | grep -E "^FILES:" | head -1 | cut -d: -f2- | sed 's/^ *//')
     next=$(echo "$text" | grep -E "^NEXT:" | head -1 | cut -d: -f2- | sed 's/^ *//')
     blocker=$(echo "$text" | grep -E "^BLOCKER:" | head -1 | cut -d: -f2- | sed 's/^ *//')
+
+    # Escape values for safe shell inclusion
+    status=$(escape_for_shell "$status")
+    summary=$(escape_for_shell "$summary")
+    files=$(escape_for_shell "$files")
+    next=$(escape_for_shell "$next")
+    blocker=$(escape_for_shell "$blocker")
 
     # Output as shell-sourceable format
     echo "STATUS_VALUE=\"$status\""
@@ -135,6 +156,14 @@ read_status() {
     if is_valid_status "$status"; then
         is_valid="true"
     fi
+
+    # Escape values for safe shell inclusion
+    timestamp=$(escape_for_shell "$timestamp")
+    status=$(escape_for_shell "$status")
+    summary=$(escape_for_shell "$summary")
+    files=$(escape_for_shell "$files")
+    next=$(escape_for_shell "$next")
+    blocker=$(escape_for_shell "$blocker")
 
     echo "STATUS_VALID=$is_valid"
     echo "STATUS_STALE=$is_stale"

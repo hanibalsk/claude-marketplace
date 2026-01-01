@@ -89,9 +89,9 @@ When `/loop` is active:
 
 ## Safety Limits
 
-- **Max iterations**: 50 (configurable in `.claude/hooks/lib/loop-control.sh`)
-- **Turn limit per item**: 30
-- **Auto-pause on**: 3 consecutive errors, context limit warning
+- **Max iterations**: 50 (configurable in `hooks/lib/loop-control.sh`)
+- **Error threshold**: 3 consecutive errors (configurable in `hooks/lib/loop-control.sh`)
+- **Auto-pause on**: consecutive errors threshold, BLOCKED status, queue empty
 
 ## Project Structure
 

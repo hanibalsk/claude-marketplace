@@ -20,13 +20,13 @@ Spawn a specific type of agent to handle a task.
 
 | Agent | Tools | Model | Use Case |
 |-------|-------|-------|----------|
-| `developer` | All + Task | opus | Feature implementation |
-| `reviewer` | Read-only | opus | Code review |
-| `fixer` | All | sonnet | Fix issues/failures |
+| `developer` | Bash,Read,Write,Edit,Glob,Grep,Task | sonnet | Feature implementation |
+| `reviewer` | Bash,Read,Glob,Grep | sonnet | Code review (read-only) |
+| `fixer` | Bash,Read,Write,Edit,Glob,Grep | sonnet | Fix issues/failures |
 | `orchestrator` | All + Task | opus | Autonomous control |
-| `explorer` | Read-only | haiku | Codebase exploration |
+| `explorer` | Read,Glob,Grep | haiku | Codebase exploration |
 | `pr-shepherd` | All + Task | sonnet | PR management |
-| `conflict-resolver` | All | sonnet | Merge conflicts |
+| `conflict-resolver` | Bash,Read,Write,Edit | sonnet | Merge conflicts |
 
 ## Examples
 
