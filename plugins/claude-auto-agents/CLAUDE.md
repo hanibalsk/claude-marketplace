@@ -95,7 +95,8 @@ When `/loop` is active:
 - **Error threshold**: 3 consecutive errors (configurable in `hooks/lib/loop-control.sh`)
 - **WAITING threshold**: 10 consecutive WAITING statuses (prevents infinite loops)
 - **NO_STATUS threshold**: 5 consecutive iterations without STATUS signal (prevents runaway loops when agent doesn't emit status)
-- **Auto-pause on**: consecutive errors threshold, WAITING threshold, NO_STATUS threshold, BLOCKED status, queue empty
+- **Context exhaustion**: Auto-detects low context, saves recovery state, pauses loop
+- **Auto-pause on**: consecutive errors threshold, WAITING threshold, NO_STATUS threshold, BLOCKED status, queue empty, context exhaustion
 
 ## Project Structure
 
@@ -107,6 +108,8 @@ work/
   blockers.md                # Blocked items + reasons
   .loop-state                # Loop state (iteration, errors, etc.)
   .status                    # Current STATUS signal file
+  .running-agents.json       # Currently running background agents
+  .recovery-state.json       # Recovery state after context exhaustion
   .debug.log                 # Debug log (if CLAUDE_DEBUG=1)
   .loop.log                  # Loop activity log
   .agent-history.jsonl       # Structured JSON log of all activity
@@ -136,11 +139,30 @@ Use `/debug` to see a live dashboard of loop state, queue, locks, and recent err
 
 ## Context Recovery
 
-When Claude Code runs low on context, it automatically summarizes and continues. The loop handles this gracefully:
+When Claude Code runs low on context, the plugin automatically:
 
-### Automatic Recovery
+1. **Detects** context exhaustion via output signals
+2. **Saves** recovery state including running agents and current task
+3. **Pauses** the loop to allow context compaction
+4. **Injects** recovery prompt on next session start
 
-Session continues with summary injected. The `work/` files persist state across context resets.
+### Automatic Recovery Flow
+
+```
+Context Low Detected
+    ↓
+Save Recovery State (.recovery-state.json)
+    ↓
+Pause Loop (allow compaction)
+    ↓
+[User runs /compact or context auto-compacts]
+    ↓
+New Session Starts
+    ↓
+Recovery Prompt Injected
+    ↓
+Resume with: check git status → commit work → continue task
+```
 
 ### Manual Recovery
 

@@ -28,6 +28,10 @@ fi
 if ! source "$SCRIPT_DIR/lib/queue-manager.sh" 2>/dev/null; then
     log_warn "Failed to source queue-manager.sh"
 fi
+# shellcheck source=lib/agent-recovery.sh
+if ! source "$SCRIPT_DIR/lib/agent-recovery.sh" 2>/dev/null; then
+    log_warn "Failed to source agent-recovery.sh"
+fi
 
 log_debug "Session start hook initialized"
 
@@ -225,4 +229,12 @@ if [[ -f "$CURRENT_FILE" ]] && [[ -s "$CURRENT_FILE" ]]; then
         echo ""
         echo "$CURRENT_CONTENT"
     fi
+fi
+
+# Check for agent recovery (context exhaustion recovery)
+if needs_recovery 2>/dev/null; then
+    generate_recovery_prompt 2>/dev/null || true
+
+    # Clear recovery after displaying (will be re-saved if needed)
+    clear_recovery_state 2>/dev/null || true
 fi

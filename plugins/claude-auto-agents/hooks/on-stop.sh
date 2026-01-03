@@ -26,6 +26,8 @@ source "$SCRIPT_DIR/lib/loop-control.sh" 2>/dev/null || true
 source "$SCRIPT_DIR/lib/status-parser.sh" 2>/dev/null || true
 # shellcheck source=lib/queue-manager.sh
 source "$SCRIPT_DIR/lib/queue-manager.sh" 2>/dev/null || true
+# shellcheck source=lib/agent-recovery.sh
+source "$SCRIPT_DIR/lib/agent-recovery.sh" 2>/dev/null || true
 
 # Start timing for this hook
 start_timer
@@ -39,6 +41,37 @@ WORK_DIR="$PROJECT_DIR/work"
 
 # Read loop state
 read_loop_state 2>/dev/null || true
+
+# === Context Low Detection ===
+# Check if context is exhausted and save recovery state if needed
+if detect_context_low 2>/dev/null; then
+    log_warn "Context exhaustion detected"
+
+    # Check if we have running agents
+    if has_running_agents 2>/dev/null; then
+        local agent_count
+        agent_count=$(count_running_agents 2>/dev/null || echo "0")
+        log_warn "Found $agent_count interrupted agent(s)"
+
+        # Save recovery state for resumption
+        save_recovery_state "Context exhausted with $agent_count running agent(s)" \
+            "Loop iteration: ${LOOP_ITERATION:-0}, Task: ${LOOP_PROMPT:-unknown}" 2>/dev/null || true
+
+        echo ""
+        echo "## ⚠️ Context Exhaustion Detected"
+        echo ""
+        echo "Context is low with **$agent_count agent(s)** still running."
+        echo ""
+        echo "Recovery state saved. After compaction, use \`/loop\` to resume."
+        echo "Check \`git status\` for any uncommitted work from agents."
+        echo ""
+
+        # Pause loop to allow compaction
+        stop_loop 2>/dev/null || true
+        log_operation "on-stop" "exit" "reason=context_exhausted,agents=$agent_count"
+        exit 0
+    fi
+fi
 
 # If loop is not active, allow normal exit
 if [[ "${LOOP_ACTIVE:-false}" != "true" ]]; then
