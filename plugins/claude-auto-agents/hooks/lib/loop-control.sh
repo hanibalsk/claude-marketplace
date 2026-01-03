@@ -4,17 +4,14 @@
 # Manages the autonomous loop state: active/inactive, iteration count, limits,
 # error tracking, and current item tracking.
 
-# Only set SCRIPT_DIR if not already set (avoid overwriting parent's value)
-if [[ -z "${_LOOP_CONTROL_DIR:-}" ]]; then
-    _LOOP_CONTROL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source common utilities
 # shellcheck source=common.sh
-source "$_LOOP_CONTROL_DIR/common.sh" 2>/dev/null || true
+source "$SCRIPT_DIR/common.sh" 2>/dev/null || true
 
 # State file location (in work/ for persistence across context resets)
-LOOP_STATE_FILE="$(get_work_dir 2>/dev/null || echo "$_LOOP_CONTROL_DIR")/.loop-state"
+LOOP_STATE_FILE="$(get_work_dir 2>/dev/null || echo "$SCRIPT_DIR")/.loop-state"
 
 # Default values
 DEFAULT_MAX_ITERATIONS=50
@@ -22,6 +19,7 @@ DEFAULT_ERROR_THRESHOLD=3
 
 # Additional defaults for hang detection
 DEFAULT_WAITING_THRESHOLD=10
+DEFAULT_NO_STATUS_THRESHOLD=5
 
 # Initialize loop state file if missing
 init_loop_state() {
@@ -39,6 +37,8 @@ LAST_STATUS=""
 LAST_UPDATE=""
 WAITING_COUNT=0
 WAITING_THRESHOLD=$DEFAULT_WAITING_THRESHOLD
+NO_STATUS_COUNT=0
+NO_STATUS_THRESHOLD=$DEFAULT_NO_STATUS_THRESHOLD
 ITERATION_START_MS=0
 TOTAL_ELAPSED_MS=0
 EOF
@@ -65,9 +65,11 @@ update_loop_state() {
     local current_item="${8:-}"
     local last_status="${9:-}"
 
-    # Preserve timing/waiting fields if they exist
+    # Preserve timing/waiting/no-status fields if they exist
     local waiting_count="${WAITING_COUNT:-0}"
     local waiting_threshold="${WAITING_THRESHOLD:-$DEFAULT_WAITING_THRESHOLD}"
+    local no_status_count="${NO_STATUS_COUNT:-0}"
+    local no_status_threshold="${NO_STATUS_THRESHOLD:-$DEFAULT_NO_STATUS_THRESHOLD}"
     local iteration_start_ms="${ITERATION_START_MS:-0}"
     local total_elapsed_ms="${TOTAL_ELAPSED_MS:-0}"
 
@@ -84,6 +86,8 @@ LAST_STATUS="$last_status"
 LAST_UPDATE="$(get_timestamp 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")"
 WAITING_COUNT=$waiting_count
 WAITING_THRESHOLD=$waiting_threshold
+NO_STATUS_COUNT=$no_status_count
+NO_STATUS_THRESHOLD=$no_status_threshold
 ITERATION_START_MS=$iteration_start_ms
 TOTAL_ELAPSED_MS=$total_elapsed_ms
 EOF
@@ -108,6 +112,8 @@ update_state_field() {
         LAST_STATUS) LAST_STATUS="$value" ;;
         WAITING_COUNT) WAITING_COUNT="$value" ;;
         WAITING_THRESHOLD) WAITING_THRESHOLD="$value" ;;
+        NO_STATUS_COUNT) NO_STATUS_COUNT="$value" ;;
+        NO_STATUS_THRESHOLD) NO_STATUS_THRESHOLD="$value" ;;
         ITERATION_START_MS) ITERATION_START_MS="$value" ;;
         TOTAL_ELAPSED_MS) TOTAL_ELAPSED_MS="$value" ;;
         *) return 1 ;;
@@ -269,6 +275,44 @@ waiting_threshold_exceeded() {
     [[ ${WAITING_COUNT:-0} -ge $threshold ]]
 }
 
+# === NO_STATUS Counter (for missing status detection) ===
+
+# Increment NO_STATUS count, return new count
+# Returns 1 (failure) if threshold reached
+increment_no_status() {
+    read_loop_state
+    local new_count=$((${NO_STATUS_COUNT:-0} + 1))
+    update_state_field "NO_STATUS_COUNT" "$new_count"
+
+    local threshold="${NO_STATUS_THRESHOLD:-$DEFAULT_NO_STATUS_THRESHOLD}"
+    if [[ $new_count -ge $threshold ]]; then
+        log_warn "NO_STATUS threshold reached ($new_count iterations without status)" 2>/dev/null || true
+        echo "$new_count"
+        return 1  # Signal to pause
+    fi
+
+    echo "$new_count"
+    return 0
+}
+
+# Reset NO_STATUS count to 0
+reset_no_status() {
+    update_state_field "NO_STATUS_COUNT" "0"
+}
+
+# Get current NO_STATUS count
+get_no_status_count() {
+    read_loop_state
+    echo "${NO_STATUS_COUNT:-0}"
+}
+
+# Check if NO_STATUS threshold exceeded
+no_status_threshold_exceeded() {
+    read_loop_state
+    local threshold="${NO_STATUS_THRESHOLD:-$DEFAULT_NO_STATUS_THRESHOLD}"
+    [[ ${NO_STATUS_COUNT:-0} -ge $threshold ]]
+}
+
 # === Iteration History Logging ===
 
 # Get current time in milliseconds (portable)
@@ -316,7 +360,12 @@ log_iteration_end() {
 
     local now_ms
     now_ms=$(get_time_ms)
-    local elapsed_ms=$((now_ms - ${ITERATION_START_MS:-now_ms}))
+    # If ITERATION_START_MS is 0 or not set, use now_ms to avoid huge elapsed values
+    local start_ms="${ITERATION_START_MS:-0}"
+    local elapsed_ms=0
+    if [[ $start_ms -gt 0 ]]; then
+        elapsed_ms=$((now_ms - start_ms))
+    fi
 
     # Update total elapsed time
     local new_total=$((${TOTAL_ELAPSED_MS:-0} + elapsed_ms))
@@ -357,6 +406,7 @@ get_loop_status() {
     echo "  Iteration: $LOOP_ITERATION / $LOOP_MAX_ITERATIONS"
     echo "  Consecutive Errors: $CONSECUTIVE_ERRORS / ${ERROR_THRESHOLD:-$DEFAULT_ERROR_THRESHOLD}"
     echo "  WAITING Count: ${WAITING_COUNT:-0} / ${WAITING_THRESHOLD:-$DEFAULT_WAITING_THRESHOLD}"
+    echo "  NO_STATUS Count: ${NO_STATUS_COUNT:-0} / ${NO_STATUS_THRESHOLD:-$DEFAULT_NO_STATUS_THRESHOLD}"
     if [[ -n "$CURRENT_ITEM" ]]; then
         echo "  Current Item: $CURRENT_ITEM"
     fi
@@ -449,6 +499,19 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         waiting-exceeded)
             waiting_threshold_exceeded && echo "true" || echo "false"
             ;;
+        no-status)
+            get_no_status_count
+            ;;
+        inc-no-status)
+            increment_no_status
+            ;;
+        reset-no-status)
+            reset_no_status
+            echo "NO_STATUS count reset to 0"
+            ;;
+        no-status-exceeded)
+            no_status_threshold_exceeded && echo "true" || echo "false"
+            ;;
         log-start)
             log_iteration_start
             echo "Iteration start logged"
@@ -482,6 +545,12 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             echo "  inc-waiting           - Increment WAITING count"
             echo "  reset-waiting         - Reset WAITING count to 0"
             echo "  waiting-exceeded      - Check if threshold exceeded"
+            echo ""
+            echo "NO_STATUS Tracking:"
+            echo "  no-status             - Get consecutive NO_STATUS count"
+            echo "  inc-no-status         - Increment NO_STATUS count"
+            echo "  reset-no-status       - Reset NO_STATUS count to 0"
+            echo "  no-status-exceeded    - Check if threshold exceeded"
             echo ""
             echo "Iteration History:"
             echo "  log-start             - Log iteration start"

@@ -128,9 +128,10 @@ case "$STATUS_VALUE" in
         # Log iteration end with timing
         log_iteration_end "COMPLETE" "$STATUS_SUMMARY"
 
-        # Reset consecutive errors and WAITING count on success
+        # Reset consecutive errors, WAITING count, and NO_STATUS count on success
         reset_errors 2>/dev/null || true
         reset_waiting 2>/dev/null || true
+        reset_no_status 2>/dev/null || true
 
         # Complete the current item if we know what it is
         if [[ -n "$CURRENT_ITEM" ]]; then
@@ -174,6 +175,9 @@ case "$STATUS_VALUE" in
         # Log iteration end with timing
         log_iteration_end "BLOCKED" "$STATUS_BLOCKER"
 
+        # Reset NO_STATUS count since we got a valid status
+        reset_no_status 2>/dev/null || true
+
         # Block the current item if we know what it is
         if [[ -n "$CURRENT_ITEM" ]]; then
             block_item "$CURRENT_ITEM" "$STATUS_BLOCKER" 2>/dev/null || true
@@ -197,6 +201,9 @@ case "$STATUS_VALUE" in
     "WAITING")
         log_info "Processing WAITING status"
         echo "LOOP: Iteration $NEW_ITERATION - Waiting for external event."
+
+        # Reset NO_STATUS count since we got a valid status
+        reset_no_status 2>/dev/null || true
 
         # Increment WAITING counter - this will return 1 if threshold exceeded
         if ! increment_waiting 2>/dev/null; then
@@ -227,6 +234,9 @@ case "$STATUS_VALUE" in
 
         # Log iteration end with timing
         log_iteration_end "ERROR" "$STATUS_SUMMARY"
+
+        # Reset NO_STATUS count since we got a valid status
+        reset_no_status 2>/dev/null || true
 
         # Increment consecutive errors
         ERROR_COUNT=$(increment_errors 2>/dev/null || echo "1")
@@ -262,6 +272,20 @@ case "$STATUS_VALUE" in
         # Log iteration end with unknown status
         log_iteration_end "UNKNOWN" "No STATUS signal emitted"
 
+        # Increment NO_STATUS counter - this will return 1 if threshold exceeded
+        if ! increment_no_status 2>/dev/null; then
+            log_error "NO_STATUS threshold exceeded, pausing loop"
+            echo ""
+            echo "LOOP: Too many consecutive iterations without STATUS signal. Pausing."
+            echo "The agent may be stuck or not emitting status correctly."
+            echo "Use /loop to resume after investigating."
+            stop_loop 2>/dev/null || true
+            log_operation "on-stop" "exit" "reason=no_status_threshold"
+            exit 0
+        fi
+
+        NO_STATUS_CNT=$(get_no_status_count 2>/dev/null || echo "?")
+
         # Check if queue is empty - if so, we're done
         if is_queue_empty 2>/dev/null; then
             echo "LOOP: Queue is empty. Stopping loop."
@@ -277,11 +301,11 @@ case "$STATUS_VALUE" in
         echo ""
         echo "Valid values: COMPLETE | BLOCKED | WAITING | ERROR"
         echo ""
-        echo "Continuing to next iteration..."
+        echo "Continuing to next iteration... (NO_STATUS count: $NO_STATUS_CNT / ${NO_STATUS_THRESHOLD:-5})"
 
         set_last_status "" 2>/dev/null || true
-        log_info "Iteration $NEW_ITERATION: no STATUS, continuing"
-        log_operation "on-stop" "continue" "status=NONE"
+        log_info "Iteration $NEW_ITERATION: no STATUS (count: $NO_STATUS_CNT), continuing"
+        log_operation "on-stop" "continue" "status=NONE,no_status_count=$NO_STATUS_CNT"
         exit 2
         ;;
 esac
