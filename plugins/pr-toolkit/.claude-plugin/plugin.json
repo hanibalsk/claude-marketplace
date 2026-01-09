@@ -1,6 +1,6 @@
 {
   "name": "pr-toolkit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "PR lifecycle management and code review workflows - agents for creating, reviewing, and merging pull requests",
   "author": {
     "name": "hanibalsk",
