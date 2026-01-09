@@ -28,9 +28,22 @@ mkdir -p "$WORK_DIR"
 
 # Log subagent completion to history
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-cat >> "$AGENT_HISTORY" << EOF
-{"event":"subagent_stop","agent_id":"$AGENT_ID","agent_type":"$AGENT_TYPE","status":"$AGENT_STATUS","timestamp":"$TIMESTAMP"}
-EOF
+# Use jq for safe JSON construction to prevent injection
+if command -v jq &> /dev/null; then
+    jq -n -c \
+        --arg event "subagent_stop" \
+        --arg agent_id "$AGENT_ID" \
+        --arg agent_type "$AGENT_TYPE" \
+        --arg status "$AGENT_STATUS" \
+        --arg timestamp "$TIMESTAMP" \
+        '{event: $event, agent_id: $agent_id, agent_type: $agent_type, status: $status, timestamp: $timestamp}' >> "$AGENT_HISTORY"
+else
+    # Fallback with basic escaping (jq preferred)
+    SAFE_ID="${AGENT_ID//\"/\\\"}"
+    SAFE_TYPE="${AGENT_TYPE//\"/\\\"}"
+    SAFE_STATUS="${AGENT_STATUS//\"/\\\"}"
+    echo "{\"event\":\"subagent_stop\",\"agent_id\":\"$SAFE_ID\",\"agent_type\":\"$SAFE_TYPE\",\"status\":\"$SAFE_STATUS\",\"timestamp\":\"$TIMESTAMP\"}" >> "$AGENT_HISTORY"
+fi
 
 # Update running agents tracking
 if [[ -f "$RUNNING_AGENTS" ]]; then

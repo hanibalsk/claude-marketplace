@@ -2,6 +2,7 @@
 # Check if agent output contains a valid STATUS signal
 # Usage: check-status-signal.sh [output_file]
 # Exits 0 if valid STATUS found, 1 otherwise
+# shellcheck disable=SC2034  # Variables are intentionally exported via echo for parsing
 
 set -euo pipefail
 

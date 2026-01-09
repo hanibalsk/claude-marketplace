@@ -28,6 +28,7 @@ if ! echo "$CONTENT" | grep -qiE '##\s*Review\s*Summary|##\s*Summary'; then
 fi
 
 # Check for Verdict
+VERDICT=""
 if echo "$CONTENT" | grep -qiE '\*\*Verdict\*\*:\s*(APPROVED|CHANGES_REQUESTED|NEEDS_DISCUSSION)|Verdict:\s*(APPROVED|CHANGES_REQUESTED|NEEDS_DISCUSSION)'; then
     VERDICT=$(echo "$CONTENT" | grep -oiE '(APPROVED|CHANGES_REQUESTED|NEEDS_DISCUSSION)' | head -1 | tr '[:lower:]' '[:upper:]')
     echo "VERDICT=$VERDICT"
@@ -36,7 +37,7 @@ else
 fi
 
 # Check for Issues section if not APPROVED
-if [[ -v VERDICT ]] && [[ "$VERDICT" != "APPROVED" ]]; then
+if [[ -n "$VERDICT" ]] && [[ "$VERDICT" != "APPROVED" ]]; then
     if ! echo "$CONTENT" | grep -qiE '##\s*Issues|###\s*Critical|###\s*Major|###\s*Minor'; then
         WARNINGS+=("Verdict is $VERDICT but no Issues section found")
     fi
