@@ -12,8 +12,15 @@
 set -euo pipefail
 
 HOST="${1:?Usage: $0 <ssh-host> [namespace] [--full]}"
-NS="${2:-default}"
-FULL="${3:-}"
+
+# Handle --full as second arg
+if [[ "${2:-}" == "--full" ]]; then
+    NS="default"
+    FULL="--full"
+else
+    NS="${2:-default}"
+    FULL="${3:-}"
+fi
 
 # Colors (may not work over SSH, but useful for local output)
 RED='\033[0;31m'

@@ -142,3 +142,4 @@ log_info "Version bumped: $PLUGIN_NAME $CURRENT_VERSION → $NEW_VERSION"
 echo ""
 echo "Next steps:"
 echo "  git add -A && git commit -m \"chore($PLUGIN_NAME): bump version to $NEW_VERSION\""
+
