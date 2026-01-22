@@ -1,6 +1,6 @@
 {
   "name": "k8s-toolkit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Kubernetes operations toolkit - cluster management, debugging, manifest generation, deployment automation, k9s UI, and SSH remote access",
   "author": {
     "name": "hanibalsk",

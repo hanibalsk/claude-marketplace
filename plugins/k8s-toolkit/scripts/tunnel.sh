@@ -116,12 +116,12 @@ get_pid() {
 # Start tunnel
 start_tunnel() {
     local name="$1"
-    
+
     if is_running "$name"; then
         log_warn "Tunnel '$name' already running (PID: $(get_pid "$name"))"
         return 0
     fi
-    
+
     local config
     config=$(get_tunnel_config "$name")
     if [[ -z "$config" ]]; then
@@ -130,17 +130,20 @@ start_tunnel() {
         list_tunnels
         return 1
     fi
-    
+
     IFS='|' read -r _ local_port remote bastion <<< "$config"
-    
-    local ssh_cmd=(ssh -f -N -L "${local_port}:${remote}")
+
+    # Build SSH command (without -f, we background it ourselves for reliable PID capture)
+    local ssh_cmd=(ssh -N -L "${local_port}:${remote}")
     ssh_cmd+=(-o "ServerAliveInterval=30")
     ssh_cmd+=(-o "ServerAliveCountMax=3")
     ssh_cmd+=(-o "ExitOnForwardFailure=yes")
+    ssh_cmd+=(-o "BatchMode=yes")  # Fail fast if auth requires interaction
+    ssh_cmd+=(-o "ConnectTimeout=10")
     ssh_cmd+=(-o "ControlMaster=auto")
     ssh_cmd+=(-o "ControlPath=${SOCKET_DIR}/%r@%h-%p")
     ssh_cmd+=(-o "ControlPersist=yes")
-    
+
     if [[ -n "$bastion" ]]; then
         ssh_cmd+=("$bastion")
     else
@@ -148,27 +151,26 @@ start_tunnel() {
         local remote_host="${remote%%:*}"
         ssh_cmd+=("$remote_host")
     fi
-    
+
     log_debug "Starting tunnel: ${ssh_cmd[*]}"
-    
-    if "${ssh_cmd[@]}"; then
-        # Find the SSH process and save PID
-        sleep 1
-        local pid
-        pid=$(pgrep -f "ssh.*-L ${local_port}:${remote}" | head -1)
-        
-        if [[ -n "$pid" ]]; then
-            echo "$pid" > "${PIDFILE_DIR}/${name}.pid"
-            log_info "Tunnel '$name' started (PID: $pid)"
-            log_info "  Local:  localhost:${local_port}"
-            log_info "  Remote: ${remote}"
-            [[ -n "$bastion" ]] && log_info "  Via:    ${bastion}"
-        else
-            log_err "Tunnel started but couldn't find PID"
-            return 1
-        fi
+
+    # Start SSH in background and capture PID directly (no race condition)
+    "${ssh_cmd[@]}" &
+    local pid=$!
+
+    # Wait for connection to establish or fail
+    sleep 2
+
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "$pid" > "${PIDFILE_DIR}/${name}.pid"
+        log_info "Tunnel '$name' started (PID: $pid)"
+        log_info "  Local:  localhost:${local_port}"
+        log_info "  Remote: ${remote}"
+        [[ -n "$bastion" ]] && log_info "  Via:    ${bastion}"
     else
-        log_err "Failed to start tunnel '$name'"
+        # Process died, check if it was an auth/connection failure
+        wait "$pid" 2>/dev/null || true
+        log_err "Failed to start tunnel '$name' (check SSH keys and connectivity)"
         return 1
     fi
 }
